@@ -3,20 +3,23 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { JokesService } from './jokes.service';
 import { CreateJokeDto } from '../dto/create-joke.dto';
-import { UpdateJokeDto } from '../dto/update-joke.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { TypesService } from './types.service';
 
 @ApiTags('jokes')
 @Controller('jokes')
 export class JokesController {
-  constructor(private readonly jokesService: JokesService) {}
+  constructor(
+    private readonly jokesService: JokesService,
+    private readonly typesService: TypesService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new joke' })
@@ -24,15 +27,15 @@ export class JokesController {
     status: HttpStatus.CREATED,
     description: 'Joke created successfully',
   })
-  create(@Body() createJokeDto: CreateJokeDto) {
+  async create(@Body() createJokeDto: CreateJokeDto) {
+    // Validate joke type against available types
+    const availableTypes = await this.typesService.getTypes();
+    if (!availableTypes.includes(createJokeDto.type)) {
+      throw new BadRequestException(
+        `Invalid joke type. Available types: ${availableTypes.join(', ')}`,
+      );
+    }
     return this.jokesService.create(createJokeDto);
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get all jokes' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Returns all jokes' })
-  findAll() {
-    return this.jokesService.findAll();
   }
 
   @Get('unmoderated')
@@ -49,28 +52,11 @@ export class JokesController {
   @ApiOperation({ summary: 'Get all joke types' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Returns all joke types' })
   getJokeTypes() {
-    return this.jokesService.getJokeTypes();
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a joke by id' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Returns a joke' })
-  findOne(@Param('id') id: string) {
-    return this.jokesService.findOne(id);
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a joke' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Joke updated successfully',
-  })
-  update(@Param('id') id: string, @Body() updateJokeDto: UpdateJokeDto) {
-    return this.jokesService.update(id, updateJokeDto);
+    return this.typesService.getTypes();
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a joke' })
+  @ApiOperation({ summary: 'Delete a joke (used by moderator)' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Joke deleted successfully',

@@ -13,9 +13,6 @@ export class Joke {
 
   @Prop({ default: false })
   isModerated: boolean;
-
-  @Prop({ default: true })
-  isActive: boolean;
 }
 
 export const JokeSchema = SchemaFactory.createForClass(Joke);

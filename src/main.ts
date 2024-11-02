@@ -9,13 +9,17 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
 
+  app.enableCors();
+
+  app.setGlobalPrefix('api');
+
   const config = new DocumentBuilder()
     .setTitle('Submit Jokes API')
     .setDescription('The Submit Jokes API description')
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api-docs', app, document);
 
   const port = process.env.PORT || 3003;
   await app.listen(port);
